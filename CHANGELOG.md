@@ -5,6 +5,13 @@ All notable changes to **Stripe Webhook Guard** will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-08-17
+
+### Added
+- Interactive CLI simulator (`bin/cli.js` executable via `npx stripe-webhook-guard` / `npm start`).
+- Real-time terminal simulation of initial delivery, duplicate retry suppression, and invalid signature rejection.
+- Embedded GG Loop commercial sprint lead funnel in CLI output.
+
 ## [1.0.0] - 2026-08-17
 
 ### Added
