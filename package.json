@@ -1,0 +1,28 @@
+{
+  "name": "stripe-webhook-guard",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Production-grade, zero-leak Stripe webhook idempotency and retry resilience toolkit for Node.js & TypeScript.",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "scripts": {
+    "build": "node ./node_modules/typescript/bin/tsc",
+    "test": "node ./node_modules/typescript/bin/tsc -p tsconfig.test.json && node dist/tests/guard.test.js"
+  },
+  "keywords": [
+    "stripe",
+    "webhooks",
+    "idempotency",
+    "postgresql",
+    "retry-handling",
+    "payments",
+    "microservices",
+    "typescript"
+  ],
+  "author": "Jayson Quindao <jquindao1@icloud.com> (https://djjrip.github.io/gaming-for-groceries/)",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "typescript": "^5.3.3"
+  }
+}
