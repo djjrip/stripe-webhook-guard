@@ -1,0 +1,37 @@
+name: "💼 Commercial Support & Fast-Fix Payment Sprint"
+description: "Request a 48-hour turnkey Stripe webhook audit or custom backend implementation ($250–$500)."
+title: "[Sprint Request]: "
+labels: ["commercial-support", "priority"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Need urgent help with Stripe webhooks or payment infrastructure?
+        The **GG Loop Engineering Team** provides 24–48 hour fixed-price production implementation sprints.
+  - type: input
+    id: contact_email
+    attributes:
+      label: Contact Email
+      description: Where can we reach you to confirm timeline and scope?
+      placeholder: founder@yourcompany.com
+    validations:
+      required: true
+  - type: dropdown
+    id: sprint_tier
+    attributes:
+      label: Sprint Package
+      description: Select your desired engagement tier
+      options:
+        - "$250 Fast-Fix: 3-Hour Stripe Webhook Diagnostic & Live Repair"
+        - "$500 Full Implementation: PostgreSQL Idempotency & Queue Setup"
+        - "$1,000+ Custom Sprint: Multi-Tenant Stripe Connect & Architecture Audit"
+    validations:
+      required: true
+  - type: textarea
+    id: problem_description
+    attributes:
+      label: Problem Overview
+      description: Describe the payment or webhook failure you are experiencing
+      placeholder: We are seeing duplicate order fulfillment when Stripe retries delayed webhooks on serverless functions...
+    validations:
+      required: true
