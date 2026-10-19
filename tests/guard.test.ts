@@ -51,7 +51,18 @@ async function runTests() {
   assert.strictEqual(res3.status, 'SIGNATURE_FAILED', 'Expected invalid signature to fail');
   console.log('✅ Test 3 Passed: Tampered/invalid HMAC signature rejected.');
 
-  console.log('🎉 ALL TESTS PASSED SUCCESSFULLY (3/3)!');
+  // Test 4: WebhookAuditor AST scanner on vulnerable vs remediated fixtures
+  const auditor = new (await import('../src/auditor.js')).WebhookAuditor();
+  const vulnReport = auditor.auditPath('tests/fixtures/vulnerable-webhook.ts');
+  assert.strictEqual(vulnReport.status, 'FAIL', 'Expected vulnerable fixture to fail audit');
+  assert.strictEqual(vulnReport.criticalIssues, 2, 'Expected 2 critical flaws detected');
+  
+  const remediatedReport = auditor.auditPath('tests/fixtures/remediated-webhook.ts');
+  assert.strictEqual(remediatedReport.status, 'PASS', 'Expected remediated fixture to pass audit');
+  assert.strictEqual(remediatedReport.overallScore, 100, 'Expected remediated fixture to score 100/100');
+  console.log('✅ Test 4 Passed: WebhookAuditor AST scanner accurately validates vulnerable vs remediated fixtures.');
+
+  console.log('🎉 ALL TESTS PASSED SUCCESSFULLY (4/4)!');
 }
 
 runTests().catch(err => {
