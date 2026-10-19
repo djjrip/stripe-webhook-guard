@@ -2,6 +2,7 @@ import { IdempotencyStore, MemoryIdempotencyStore } from './idempotency.js';
 import * as crypto from 'crypto';
 
 export * from './idempotency.js';
+export * from './auditor.js';
 
 export interface WebhookEvent<T = unknown> {
   id: string;
