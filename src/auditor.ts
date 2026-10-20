@@ -59,7 +59,7 @@ export class WebhookAuditor {
     score -= infoCount * 2;
     if (score < 0) score = 0;
 
-    const status = criticalCount > 0 ? 'FAIL' : highCount > 0 ? 'WARN' : 'PASS';
+    const status = criticalCount > 0 ? 'FAIL' : (highCount > 0 || mediumCount > 0) ? 'WARN' : 'PASS';
 
     return {
       scannedFiles,
