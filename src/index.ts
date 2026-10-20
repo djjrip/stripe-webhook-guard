@@ -80,8 +80,8 @@ export class StripeWebhookGuard {
   verifySignature(rawBody: string | Buffer, signatureHeader: string, secret?: string): boolean {
     const signingSecret = secret || this.webhookSecret;
     if (!signingSecret) {
-      // If no secret provided, skip verification (development mode only)
-      return true;
+      // Fail closed: accepting an event without a signing secret is unsafe.
+      return false;
     }
 
     try {
@@ -125,16 +125,28 @@ export class StripeWebhookGuard {
     rawBody: string | Buffer,
     signatureHeader?: string
   ): Promise<WebhookProcessingResult> {
-    // 1. Verify Signature
-    if (this.webhookSecret && signatureHeader) {
-      const isValid = this.verifySignature(rawBody, signatureHeader);
-      if (!isValid) {
-        return {
-          success: false,
-          status: 'SIGNATURE_FAILED',
-          message: 'Invalid Stripe signature or timestamp drift exceeded.'
-        };
-      }
+    // 1. Fail closed unless both the configured secret and Stripe-Signature are present.
+    if (!this.webhookSecret) {
+      return {
+        success: false,
+        status: 'SIGNATURE_FAILED',
+        message: 'Webhook signing secret is not configured; refusing to process event.'
+      };
+    }
+    if (!signatureHeader || !signatureHeader.trim()) {
+      return {
+        success: false,
+        status: 'SIGNATURE_FAILED',
+        message: 'Missing Stripe-Signature header; refusing to process event.'
+      };
+    }
+    const isValid = this.verifySignature(rawBody, signatureHeader);
+    if (!isValid) {
+      return {
+        success: false,
+        status: 'SIGNATURE_FAILED',
+        message: 'Invalid Stripe signature or timestamp drift exceeded.'
+      };
     }
 
     // 2. Parse Event JSON
