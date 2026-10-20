@@ -59,7 +59,7 @@ export class WebhookAuditor {
     score -= infoCount * 2;
     if (score < 0) score = 0;
 
-    const status = criticalCount > 0 ? 'FAIL' : highCount > 0 ? 'WARN' : 'PASS';
+    const status = criticalCount > 0 ? 'FAIL' : (highCount > 0 || mediumCount > 0) ? 'WARN' : 'PASS';
 
     return {
       scannedFiles,
@@ -86,6 +86,30 @@ export class WebhookAuditor {
 
     const lines = content.split('\n');
 
+    // Next.js App Router source-pattern heuristic. This is intentionally described
+    // as a heuristic, not a complete TypeScript AST analysis or proof of exploitability.
+    const isAppRouterPostHandler =
+      /export\s+(?:async\s+)?function\s+POST\s*\(/i.test(content) ||
+      /export\s+const\s+POST\s*=/i.test(content);
+    const parsedAppRouterBody = /\b(?:req|request)\.json\s*\(\s*\)/i.test(content);
+    const preservesRawRequestBody =
+      /\b(?:req|request)\.(?:text|arrayBuffer)\s*\(\s*\)/i.test(content) ||
+      /\brawBody\b/i.test(content) ||
+      /express\.raw\s*\(/i.test(content);
+
+    if (isWebhookFile && isAppRouterPostHandler && parsedAppRouterBody && !preservesRawRequestBody) {
+      const lineIdx = lines.findIndex(l => /\b(?:req|request)\.json\s*\(\s*\)/i.test(l));
+      findings.push({
+        id: 'NEXTJS_APP_ROUTER_RAW_BODY_RISK',
+        severity: 'HIGH',
+        title: 'Next.js App Router Parses Webhook JSON Before Raw-Body Verification',
+        description: 'Heuristic pattern: a POST handler in a Stripe/webhook-related source file calls req.json() or request.json() without an obvious raw-body read/preservation pattern. Stripe signature verification requires the original request bytes; parsing and re-serializing JSON can change them. Review the full route before treating this as a confirmed vulnerability.',
+        recommendation: 'Read the request once as raw text/bytes (for example, await request.text()), verify the stripe-signature with Stripe constructEvent and STRIPE_WEBHOOK_SECRET, then parse/use the verified event. Missing signature or secret must fail closed.',
+        file: filePath,
+        line: lineIdx >= 0 ? lineIdx + 1 : undefined
+      });
+    }
+
     // 1. Raw Body Check: Express.json() used without raw body preservation
     if (/express\.json\(\)/.test(content) || /bodyParser\.json\(\)/.test(content)) {
       const hasRawBodyHandler = /express\.raw\(/i.test(content) || /verify:\s*\(req,\s*res,\s*buf\)/i.test(content) || /rawBody/i.test(content);
@@ -105,7 +129,7 @@ export class WebhookAuditor {
 
     // 2. Missing Signature Verification
     const hasStripeEvent = /stripe\.webhooks\.constructEvent|verifySignature|StripeWebhookGuard/i.test(content);
-    const mentionsStripeRoute = /post\([^)]*webhook/i.test(content) || /router\.post\([^)]*webhook/i.test(content);
+    const mentionsStripeRoute = /post\([^)]*webhook/i.test(content) || /router\.post\([^)]*webhook/i.test(content) || (isWebhookFile && isAppRouterPostHandler);
     if (mentionsStripeRoute && !hasStripeEvent) {
       findings.push({
         id: 'MISSING_SIGNATURE_VERIFICATION',

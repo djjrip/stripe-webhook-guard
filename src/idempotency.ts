@@ -35,8 +35,11 @@ export class MemoryIdempotencyStore implements IdempotencyStore {
     const existing = this.records.get(eventId);
 
     if (existing && existing.expiresAt > now) {
-      // Event already recorded and unexpired
-      return false;
+      // Completed or currently processing events are duplicates. A failed handler
+      // explicitly released the event for retry via markFailed().
+      if (existing.status !== 'FAILED') {
+        return false;
+      }
     }
 
     this.records.set(eventId, {

@@ -1,117 +1,85 @@
-# 🛡️ Stripe Webhook Guard
+# Stripe Webhook Guard
 
-> **Production-grade, zero-loss Stripe webhook idempotency, cryptographic verification, and duplicate-suppression toolkit for Node.js & TypeScript.**
+> **Experimental Node.js/TypeScript helper and source-pattern checker. Not a production-security certification.**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.3%2B-blue)](https://www.typescriptlang.org/)
-[![Tested](https://img.shields.io/badge/Tests-Passing-brightgreen)]()
+This repository contains two small tools:
 
----
+1. A webhook helper that verifies a supplied Stripe signature and delegates event deduplication to an `IdempotencyStore`.
+2. A source-pattern scanner that flags selected implementation smells in webhook-related JavaScript/TypeScript files.
 
-## 💥 The Problem
-Stripe webhook delivery guarantees are **"at-least-once."** During network timeouts, deploy spikes, or serverless cold starts:
-1. Stripe automatically retries failed/delayed webhooks.
-2. Concurrent retries cause **race conditions** and duplicate order fulfillment / double-charging.
-3. Serverless edge functions timing out after 10s cause Stripe to mark endpoints as broken.
+The goal is to make a few common mistakes easier to notice. It is not a penetration test, complete static-analysis engine, compliance tool, or proof that an application is safe.
 
-**Stripe Webhook Guard** solves this with strict database-level idempotency locking, cryptographic HMAC SHA256 verification, and sub-50ms acknowledgment patterns.
+## Current limitations
 
----
+- The built-in `MemoryIdempotencyStore` is process-local. Records disappear on restart and are not shared across server instances. It is only suitable for local experiments/tests.
+- No durable SQL/Redis idempotency adapter is included in this repository.
+- The helper cannot guarantee exactly-once business effects, zero loss, or zero duplicate fulfillment. Production behavior depends on your route, storage adapter, transaction boundaries, downstream side effects, retries, and operational design.
+- The scanner uses source-pattern/regular-expression heuristics. It is **not an AST analyzer** and can produce false positives and false negatives.
+- A clean scan or passing synthetic tests does not establish production readiness.
+- No security certification, compliance status, or independent performance benchmark is claimed.
 
-## 🏗️ Architecture
+## Requirements and local checks
 
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Stripe as Stripe API
-    participant Guard as StripeWebhookGuard
-    participant DB as Idempotency Store (Postgres / Memory)
-    participant Handler as Business Logic Handler
-
-    Stripe->>Guard: POST /webhooks/stripe (Raw Body + Signature)
-    Guard->>Guard: Verify HMAC SHA256 & Timestamp Freshness
-    alt Invalid Signature
-        Guard-->>Stripe: 400 Bad Request (Signature Failed)
-    end
-    Guard->>DB: acquireLock(eventId, ttl=600s)
-    alt Lock Already Held (Duplicate Event)
-        DB-->>Guard: false (Lock Exists)
-        Guard-->>Stripe: 200 OK (DUPLICATE_IGNORED)
-    else Lock Acquired
-        DB-->>Guard: true (New Event)
-        Guard->>Handler: execute(event)
-        Handler-->>Guard: void / result
-        Guard->>DB: markCompleted(eventId)
-        Guard-->>Stripe: 200 OK (PROCESSED)
-    end
-```
-
----
-
-## 🚀 60-Second Quickstart
-
-### 1. Installation
-```bash
-npm install stripe-webhook-guard
-```
-
-### 2. Express Integration
-```typescript
-import express from 'express';
-import { StripeWebhookGuard } from 'stripe-webhook-guard';
-
-const app = express();
-const guard = new StripeWebhookGuard({
-  webhookSecret: process.env.STRIPE_WEBHOOK_SECRET
-});
-
-// Register handler for checkout sessions
-guard.on('checkout.session.completed', async (event) => {
-  const session = event.data.object;
-  console.log(`💰 Paid: ${session.id} for $${session.amount_total / 100}`);
-  // Safe database provisioning here (zero duplicate risk!)
-});
-
-// Express webhook endpoint (must use raw body)
-app.post(
-  '/api/webhooks/stripe',
-  express.raw({ type: 'application/json' }),
-  async (req, res) => {
-    const result = await guard.processEvent(
-      req.body,
-      req.headers['stripe-signature'] as string
-    );
-
-    if (!result.success && result.status === 'SIGNATURE_FAILED') {
-      return res.status(400).send(result.message);
-    }
-
-    return res.status(200).json(result);
-  }
-);
-
-app.listen(3000, () => console.log('Webhook server running on :3000'));
-```
-
----
-
-## 🧪 Running Tests
+Use a supported Node.js version and npm.
 
 ```bash
-npx ts-node tests/guard.test.ts
+npm ci
+npm run build
+npm test
+node bin/cli.js verify
+node bin/cli.js audit ./src
 ```
 
----
+The tests exercise synthetic events and fixtures, including valid/invalid signature handling, duplicate suppression within the in-memory store, handler retry behavior, and selected source-pattern rules. These are regression checks for this repository—not proof of secure behavior in a customer's deployment.
 
-## 💼 Enterprise Support & Custom Payment Integrations
+## Signature verification
 
-Need custom payment architecture, multi-currency Stripe Connect routing, or zero-downtime database webhook reconciliation?
+For a real Stripe endpoint:
 
-* **$250 Fast-Fix Stripe Webhook Audit:** 3-hour diagnostic & production repair for failing webhook endpoints.
-* **$500 Complete Payment Pipeline Sprint:** Turnkey Express/Fastify/Next.js Stripe integration with PostgreSQL idempotency tables and dead-letter queue retries.
-* **Inquiries:** Contact Jayson Quindao (Lead Systems Architect & Founder) at **[jquindao1@icloud.com](mailto:jquindao1@icloud.com?subject=Stripe%20Webhook%20Integration%20Sprint)** or visit **[GG Loop Platform](https://djjrip.github.io/gaming-for-groceries/)**.
+- Use the exact raw request body bytes received by the server.
+- Read the `Stripe-Signature` header.
+- Load the endpoint signing secret from a protected environment/secret manager.
+- Reject requests when the header or signing secret is absent or invalid.
+- Do not parse and re-serialize request JSON before signature verification.
+- Never log or commit signing secrets or customer payloads unnecessarily.
 
----
+This helper's `processEvent` now fails closed when its configured signing secret or the signature header is missing. It is still the integrating application's responsibility to pass the correct raw body, configure the correct endpoint secret, implement error behavior, and validate the end-to-end route.
 
-## 📄 License
-MIT License. Built by the **[GG Loop](https://djjrip.github.io/gaming-for-groceries/)** engineering team.
+## Idempotency and failure recovery
+
+The included `MemoryIdempotencyStore` supports local behavior checks only. It is not a durable or distributed lock. A production implementation requires a persistence layer that safely coordinates concurrent deliveries and survives process restarts. It also needs an explicit business-level strategy for retries, partial side effects, and dead-letter/manual reconciliation.
+
+Before production use, implement and test a durable adapter, including concurrent duplicate delivery, process restart, handler failure after partial work, transaction conflicts, retry exhaustion, and manual recovery.
+
+## Source-pattern checks
+
+The scanner currently checks selected patterns such as:
+
+- Common Express JSON parsing patterns that may discard the original request body.
+- Webhook-like route handlers with no obvious signature-verification invocation.
+- Some event-id/idempotency hints.
+- Selected synchronous-work patterns.
+- Obvious webhook-secret literals.
+- A heuristic for Next.js App Router POST handlers that call `request.json()` without an obvious raw-body read.
+
+These rules only inspect source text. They do not establish control flow, runtime behavior, whether a referenced function verifies correctly, whether a storage adapter is durable, or whether an apparent issue is exploitable. Review each finding manually and test the real route.
+
+## Async-first review workflow
+
+For an initial written review, a customer can provide:
+
+1. A small, redacted route example and relevant middleware/configuration.
+2. The framework and runtime/version.
+3. A description of the expected success/failure behavior.
+4. Redacted test output or reproducible symptoms.
+5. Written acceptance criteria.
+
+Do not send secrets, live webhook signing keys, customer payloads, production database credentials, identity data, or private repositories to an unapproved external service. A review begins only after scope, access, handling of sensitive data, deliverables, and acceptance criteria are agreed in writing. A synchronous call is not required for an initial inquiry.
+
+## Status and commercial claims
+
+This project is experimental. There is no bundled durable idempotency database, production SLA, compliance certification, guaranteed turnaround time, or proof of deployment on customer systems. Any paid assistance must have a separate, written scope with explicit exclusions and acceptance criteria. A public checkout or passing local test is not evidence that a paid service has been delivered.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
