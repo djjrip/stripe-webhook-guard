@@ -33,25 +33,31 @@ async function runTests() {
     .digest('hex');
   const header = `t=${timestamp},v1=${signature}`;
 
-  // Test 1: First valid execution
+  // Test 1: A malformed extra signature must not hide a later valid v1 signature.
+  const mixedHeader = `t=${timestamp},v1=bad,v1=${signature}`;
+  assert.strictEqual(guard.verifySignature(payload, mixedHeader), true,
+    'Expected verification to accept a valid rotated signature despite a malformed extra tag');
+  console.log('✅ Test 1 Passed: Valid v1 signature is found among multiple tags.');
+
+  // Test 2: First valid execution
   const res1 = await guard.processEvent(payload, header);
   assert.strictEqual(res1.status, 'PROCESSED', 'Expected first event to be PROCESSED');
   assert.strictEqual(processedCount, 1, 'Expected handler to run exactly once');
-  console.log('✅ Test 1 Passed: Valid event processed successfully.');
+  console.log('✅ Test 2 Passed: Valid event processed successfully.');
 
-  // Test 2: Replay / Duplicate suppression
+  // Test 3: Replay / Duplicate suppression
   const res2 = await guard.processEvent(payload, header);
   assert.strictEqual(res2.status, 'DUPLICATE_IGNORED', 'Expected duplicate event to be DUPLICATE_IGNORED');
   assert.strictEqual(processedCount, 1, 'Handler MUST NOT run again on duplicate');
-  console.log('✅ Test 2 Passed: Duplicate webhook replay suppressed without duplicate execution.');
+  console.log('✅ Test 3 Passed: Duplicate webhook replay suppressed without duplicate execution.');
 
-  // Test 3: Invalid signature rejection
+  // Test 4: Invalid signature rejection
   const invalidHeader = `t=${timestamp},v1=deadbeef00000000000000000000000000000000000000000000000000000000`;
   const res3 = await guard.processEvent(payload, invalidHeader);
   assert.strictEqual(res3.status, 'SIGNATURE_FAILED', 'Expected invalid signature to fail');
-  console.log('✅ Test 3 Passed: Tampered/invalid HMAC signature rejected.');
+  console.log('✅ Test 4 Passed: Tampered/invalid HMAC signature rejected.');
 
-  // Test 4: WebhookAuditor AST scanner on vulnerable vs remediated fixtures
+  // Test 5: Existing Express scanner fixtures
   const auditor = new (await import('../src/auditor.js')).WebhookAuditor();
   const vulnReport = auditor.auditPath('tests/fixtures/vulnerable-webhook.ts');
   assert.strictEqual(vulnReport.status, 'FAIL', 'Expected vulnerable fixture to fail audit');
@@ -62,7 +68,7 @@ async function runTests() {
   assert.strictEqual(remediatedReport.overallScore, 100, 'Expected remediated fixture to score 100/100');
   console.log('✅ Test 4 Passed: Existing Express fixtures produce expected findings.');
 
-  // Test 5: Next.js App Router raw-body pattern heuristic
+  // Test 6: Next.js App Router raw-body pattern heuristic
   const nextVulnerable = auditor.auditPath('tests/fixtures/vulnerable-nextjs-webhook.ts');
   assert.ok(nextVulnerable.findings.some(f => f.id === 'NEXTJS_APP_ROUTER_RAW_BODY_RISK'),
     'Expected parsed-JSON App Router fixture to flag raw-body risk');
@@ -72,7 +78,7 @@ async function runTests() {
   assert.strictEqual(nextRemediated.status, 'PASS', 'Expected the remediated Next.js fixture to pass configured heuristics');
   console.log('✅ Test 5 Passed: Next.js App Router vulnerable/remediated fixtures differ as expected.');
 
-  // Test 6: Missing secret fails closed even if the caller supplies a plausible header.
+  // Test 7: Missing secret fails closed even if the caller supplies a plausible header.
   let unsignedProcessed = 0;
   const noSecretGuard = new StripeWebhookGuard();
   noSecretGuard.on('payment_intent.succeeded', async () => { unsignedProcessed++; });
@@ -81,7 +87,7 @@ async function runTests() {
   assert.strictEqual(unsignedProcessed, 0, 'An unconfigured guard must not dispatch unsigned events');
   console.log('✅ Test 6 Passed: Missing signing secret fails closed.');
 
-  // Test 7: Missing Stripe-Signature header fails closed.
+  // Test 8: Missing Stripe-Signature header fails closed.
   let missingHeaderProcessed = 0;
   const noHeaderGuard = new StripeWebhookGuard({ webhookSecret: secret });
   noHeaderGuard.on('payment_intent.succeeded', async () => { missingHeaderProcessed++; });
@@ -90,7 +96,7 @@ async function runTests() {
   assert.strictEqual(missingHeaderProcessed, 0, 'A missing signature must not dispatch the event');
   console.log('✅ Test 7 Passed: Missing signature header fails closed.');
 
-  // Test 8: A failed handler can be retried; completed duplicate suppression remains covered by Test 2.
+  // Test 9: A failed handler can be retried; completed duplicate suppression remains covered by Test 3.
   const retryGuard = new StripeWebhookGuard({ webhookSecret: secret });
   let retryCalls = 0;
   retryGuard.on('payment_intent.succeeded', async () => {
@@ -114,7 +120,7 @@ async function runTests() {
   assert.strictEqual(retryCalls, 2, 'Failed event should be eligible for retry once');
   console.log('✅ Test 8 Passed: Failed handler event can retry.');
 
-  console.log('🎉 ALL TESTS PASSED SUCCESSFULLY (8/8)!');
+  console.log('🎉 ALL TESTS PASSED SUCCESSFULLY (9/9)!');
 }
 
 runTests().catch(err => {
