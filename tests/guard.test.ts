@@ -66,7 +66,7 @@ async function runTests() {
   const remediatedReport = auditor.auditPath('tests/fixtures/remediated-webhook.ts');
   assert.strictEqual(remediatedReport.status, 'PASS', 'Expected remediated fixture to pass audit');
   assert.strictEqual(remediatedReport.overallScore, 100, 'Expected remediated fixture to score 100/100');
-  console.log('✅ Test 4 Passed: Existing Express fixtures produce expected findings.');
+  console.log('✅ Test 5 Passed: Existing Express fixtures produce expected findings.');
 
   // Test 6: Next.js App Router raw-body pattern heuristic
   const nextVulnerable = auditor.auditPath('tests/fixtures/vulnerable-nextjs-webhook.ts');
@@ -76,7 +76,7 @@ async function runTests() {
   assert.ok(!nextRemediated.findings.some(f => f.id === 'NEXTJS_APP_ROUTER_RAW_BODY_RISK'),
     'Expected raw-body App Router fixture not to trigger raw-body pattern rule');
   assert.strictEqual(nextRemediated.status, 'PASS', 'Expected the remediated Next.js fixture to pass configured heuristics');
-  console.log('✅ Test 5 Passed: Next.js App Router vulnerable/remediated fixtures differ as expected.');
+  console.log('✅ Test 6 Passed: Next.js App Router vulnerable/remediated fixtures differ as expected.');
 
   // Test 7: Missing secret fails closed even if the caller supplies a plausible header.
   let unsignedProcessed = 0;
@@ -85,7 +85,7 @@ async function runTests() {
   const noSecretResult = await noSecretGuard.processEvent(payload, header);
   assert.strictEqual(noSecretResult.status, 'SIGNATURE_FAILED');
   assert.strictEqual(unsignedProcessed, 0, 'An unconfigured guard must not dispatch unsigned events');
-  console.log('✅ Test 6 Passed: Missing signing secret fails closed.');
+  console.log('✅ Test 7 Passed: Missing signing secret fails closed.');
 
   // Test 8: Missing Stripe-Signature header fails closed.
   let missingHeaderProcessed = 0;
@@ -94,7 +94,7 @@ async function runTests() {
   const noHeaderResult = await noHeaderGuard.processEvent(payload);
   assert.strictEqual(noHeaderResult.status, 'SIGNATURE_FAILED');
   assert.strictEqual(missingHeaderProcessed, 0, 'A missing signature must not dispatch the event');
-  console.log('✅ Test 7 Passed: Missing signature header fails closed.');
+  console.log('✅ Test 8 Passed: Missing signature header fails closed.');
 
   // Test 9: A failed handler can be retried; completed duplicate suppression remains covered by Test 3.
   const retryGuard = new StripeWebhookGuard({ webhookSecret: secret });
@@ -118,7 +118,7 @@ async function runTests() {
   const retryAttempt = await retryGuard.processEvent(retryPayload, retryHeader);
   assert.strictEqual(retryAttempt.status, 'PROCESSED');
   assert.strictEqual(retryCalls, 2, 'Failed event should be eligible for retry once');
-  console.log('✅ Test 8 Passed: Failed handler event can retry.');
+  console.log('✅ Test 9 Passed: Failed handler event can retry.');
 
   console.log('🎉 ALL TESTS PASSED SUCCESSFULLY (9/9)!');
 }
