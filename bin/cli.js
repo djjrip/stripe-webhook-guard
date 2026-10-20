@@ -46,7 +46,7 @@ if (command === 'audit') {
     console.log(`   Info Issues:     ${report.infoIssues}\n`);
 
     if (report.findings.length === 0) {
-      console.log('🎉 No Stripe webhook vulnerabilities detected! Your implementation meets core reliability standards.');
+      console.log('No matched patterns found. This heuristic may miss vulnerabilities; manually review raw-body handling, signature verification, and durable idempotency.');
     } else {
       console.log('----------------------------------------------------------------');
       console.log('DETAILED FINDINGS:');
@@ -59,7 +59,7 @@ if (command === 'audit') {
         console.log(`   Fix:    ${f.recommendation}`);
       });
       console.log('\n----------------------------------------------------------------');
-      console.log('💼 Need this fixed? Book the $499 Stripe Webhook Hardening Sprint:');
+      console.log('Scanner output is a starting point for manual review, not proof of production safety:');
       console.log('   Direct: Jayson Quindao | (469) 371-8556 | jquindao1@icloud.com');
       console.log('   Checkout: https://djjrip.github.io/hire-now.html');
       console.log('----------------------------------------------------------------');
@@ -108,7 +108,7 @@ if (command === 'audit') {
     console.log(`3. Tampered Payload Ingestion: ${res3.status} (Rejected: true)\n`);
 
     if (res1.status === 'PROCESSED' && res2.status === 'DUPLICATE_IGNORED' && res3.status === 'SIGNATURE_FAILED') {
-      console.log('✅ ALL VERIFICATION CHECKS PASSED (3/3). Engine is production ready.');
+      console.log('✅ Local behavior checks passed (3/3). These checks use an in-memory store and synthetic events; they do not establish production readiness.');
     } else {
       console.error('❌ Verification failure detected.');
       process.exit(1);
