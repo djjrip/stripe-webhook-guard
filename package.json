@@ -2,7 +2,7 @@
   "name": "stripe-webhook-guard",
   "version": "1.1.0",
   "type": "module",
-  "description": "Production-grade, zero-leak Stripe webhook idempotency and retry resilience toolkit for Node.js & TypeScript.",
+  "description": "Experimental Stripe webhook signature helper, in-memory idempotency store, and source-pattern audit heuristics for Node.js and TypeScript.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
