@@ -40,8 +40,8 @@ export interface WebhookProcessingResult {
 }
 
 /**
- * Enterprise Stripe Webhook Guard: Handles cryptographic validation, strict database idempotency,
- * duplicate suppression, and safe error propagation for Node.js / TypeScript backends.
+ * Experimental Stripe webhook helper. It validates configured signatures and delegates duplicate tracking
+ * to the selected store. The default store is process-local memory, not durable or cross-process safe.
  */
 export class StripeWebhookGuard {
   private webhookSecret?: string;
