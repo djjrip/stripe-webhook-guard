@@ -112,7 +112,15 @@ export class StripeWebhookGuard {
         .update(payload, 'utf8')
         .digest('hex');
 
-      return signatures.some(sig => crypto.timingSafeEqual(Buffer.from(sig, 'hex'), Buffer.from(expectedSignature, 'hex')));
+      const expected = Buffer.from(expectedSignature, 'hex');
+      // Stripe can include more than one v1 signature during secret rotation.
+      // Ignore malformed tags individually instead of letting one bad tag abort
+      // checking a later valid tag.
+      return signatures.some(sig => {
+        if (!/^[a-f0-9]{64}$/i.test(sig)) return false;
+        const candidate = Buffer.from(sig, 'hex');
+        return candidate.length === expected.length && crypto.timingSafeEqual(candidate, expected);
+      });
     } catch {
       return false;
     }
