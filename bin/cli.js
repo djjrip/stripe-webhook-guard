@@ -22,8 +22,8 @@ if (!command || command === '--help' || command === '-h') {
   console.log('\nExamples:');
   console.log('  npx stripe-webhook-guard audit ./src/routes');
   console.log('  npx stripe-webhook-guard audit server.js');
-  console.log('\nNeed expert hardening? Contact: Jayson Quindao <jquindao1@icloud.com> | (469) 371-8556');
-  console.log('Book 48-Hour Hardening Sprint: https://djjrip.github.io/hire-now.html');
+  console.log('\nThis is a source-pattern heuristic, not a security certification.');
+  console.log('A clean scan cannot prove that a webhook integration is safe.');
   process.exit(0);
 }
 
@@ -38,7 +38,7 @@ if (command === 'audit') {
     const report = auditor.auditPath(resolvedTarget);
 
     console.log(`📁 Files Scanned: ${report.scannedFiles}`);
-    console.log(`📊 Reliability Score: ${report.overallScore}/100`);
+    console.log(`📊 Heuristic Pattern Score: ${report.overallScore}/100`);
     console.log(`🚨 Status: ${report.status === 'PASS' ? '✅ PASS' : report.status === 'WARN' ? '⚠️ WARNING' : '❌ CRITICAL FLAWS DETECTED'}\n`);
     console.log(`   Critical Issues: ${report.criticalIssues}`);
     console.log(`   High Issues:     ${report.highIssues}`);
@@ -60,8 +60,7 @@ if (command === 'audit') {
       });
       console.log('\n----------------------------------------------------------------');
       console.log('Scanner output is a starting point for manual review, not proof of production safety:');
-      console.log('   Direct: Jayson Quindao | (469) 371-8556 | jquindao1@icloud.com');
-      console.log('   Checkout: https://djjrip.github.io/hire-now.html');
+      console.log('   A human must inspect the route, runtime configuration, and durable idempotency store.');
       console.log('----------------------------------------------------------------');
     }
 
