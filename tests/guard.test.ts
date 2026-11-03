@@ -62,7 +62,17 @@ async function runTests() {
   assert.strictEqual(remediatedReport.overallScore, 100, 'Expected remediated fixture to score 100/100');
   console.log('✅ Test 4 Passed: WebhookAuditor AST scanner accurately validates vulnerable vs remediated fixtures.');
 
-  console.log('🎉 ALL TESTS PASSED SUCCESSFULLY (4/4)!');
+  // Test 5: WebhookAuditor AST scanner on Next.js App Router fixtures
+  const nextVulnReport = auditor.auditPath('tests/fixtures/vulnerable-nextjs-webhook.ts');
+  assert.strictEqual(nextVulnReport.status, 'FAIL', 'Expected vulnerable Next.js fixture to fail audit');
+  assert.strictEqual(nextVulnReport.findings.some(f => f.id === 'NEXTJS_RAW_BODY_PARSED'), true, 'Expected NEXTJS_RAW_BODY_PARSED finding');
+  
+  const nextRemediatedReport = auditor.auditPath('tests/fixtures/remediated-nextjs-webhook.ts');
+  assert.strictEqual(nextRemediatedReport.status, 'PASS', 'Expected remediated Next.js fixture to pass audit');
+  assert.strictEqual(nextRemediatedReport.overallScore, 100, 'Expected remediated Next.js fixture to score 100/100');
+  console.log('✅ Test 5 Passed: WebhookAuditor AST scanner validates Next.js App Router webhook handlers.');
+
+  console.log('🎉 ALL TESTS PASSED SUCCESSFULLY (5/5)!');
 }
 
 runTests().catch(err => {

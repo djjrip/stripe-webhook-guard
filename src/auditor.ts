@@ -103,9 +103,28 @@ export class WebhookAuditor {
       }
     }
 
+    // 1b. Next.js App Router Raw Body Check: req.json() used in webhook route
+    const codeWithoutComments = content.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '');
+    const isNextRoute = /export\s+async\s+function\s+POST|export\s+const\s+POST/i.test(codeWithoutComments);
+    if (isNextRoute && /(req|request)\.json\(\)/i.test(codeWithoutComments)) {
+      const hasRawText = /(req|request)\.text\(\)/i.test(codeWithoutComments);
+      if (!hasRawText) {
+        const lineIdx = lines.findIndex(l => !l.trim().startsWith('//') && /(req|request)\.json\(\)/i.test(l));
+        findings.push({
+          id: 'NEXTJS_RAW_BODY_PARSED',
+          severity: 'CRITICAL',
+          title: 'Next.js App Router Uses req.json() Instead of Raw Body (HMAC Verification Failure)',
+          description: 'Calling req.json() parses request bytes into a JavaScript object, breaking Stripe HMAC SHA-256 signature verification. Next.js App Router webhook handlers must read the raw body as text using await req.text().',
+          recommendation: 'Replace await req.json() with const rawBody = await req.text(); and pass rawBody directly to stripe.webhooks.constructEvent().',
+          file: filePath,
+          line: lineIdx >= 0 ? lineIdx + 1 : undefined
+        });
+      }
+    }
+
     // 2. Missing Signature Verification
     const hasStripeEvent = /stripe\.webhooks\.constructEvent|verifySignature|StripeWebhookGuard/i.test(content);
-    const mentionsStripeRoute = /post\([^)]*webhook/i.test(content) || /router\.post\([^)]*webhook/i.test(content);
+    const mentionsStripeRoute = /post\([^)]*webhook/i.test(content) || /router\.post\([^)]*webhook/i.test(content) || (isNextRoute && /webhook|stripe/i.test(filePath));
     if (mentionsStripeRoute && !hasStripeEvent) {
       findings.push({
         id: 'MISSING_SIGNATURE_VERIFICATION',

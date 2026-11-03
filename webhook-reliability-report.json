@@ -1,0 +1,31 @@
+{
+  "generatedAt": "2026-10-20T11:08:20.738Z",
+  "targetPath": "C:\\Users\\Jayson Quindao\\Desktop\\Projects & Code\\stripe-webhook-guard\\tests\\fixtures\\remediated-webhook.ts",
+  "scanner": "stripe-webhook-guard WebhookAuditor",
+  "scannerVersion": "1.1.0",
+  "disclaimer": "This report is produced by a source-pattern heuristic scanner. It is NOT a certified security audit, penetration test, or production-readiness certification. Findings should be reviewed by a qualified engineer before making production changes.",
+  "results": {
+    "scannedFiles": 1,
+    "criticalIssues": 0,
+    "highIssues": 0,
+    "mediumIssues": 0,
+    "infoIssues": 0,
+    "overallScore": 100,
+    "status": "PASS",
+    "findings": []
+  },
+  "referenceFixtures": [
+    "tests/fixtures/vulnerable-webhook.ts — Express handler with 3 critical flaws",
+    "tests/fixtures/remediated-webhook.ts — Express handler with all flaws resolved",
+    "tests/fixtures/vulnerable-nextjs-webhook.ts — Next.js App Router using req.json()",
+    "tests/fixtures/remediated-nextjs-webhook.ts — Next.js App Router using req.text()"
+  ],
+  "limitations": [
+    "Scanner uses regex/source-pattern matching, not TypeScript AST analysis.",
+    "Cannot detect runtime-only vulnerabilities (e.g., database race conditions).",
+    "Does not test live webhook endpoints or production Stripe traffic.",
+    "Does not verify infrastructure configuration (load balancers, CDN, WAF).",
+    "The in-memory idempotency store used in tests is not durable or production-safe.",
+    "This diagnostic does not establish compliance with PCI-DSS or SOC 2."
+  ]
+}
