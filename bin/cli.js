@@ -10,7 +10,7 @@ const command = args[0];
 function printBanner() {
   console.log('================================================================');
   console.log('🛡️  Stripe Webhook Guard — Diagnostic & Reliability Toolkit');
-  console.log('    Built by GG Loop LLC Engineering (https://ggloop.io)');
+  console.log('    Built by GG Loop LLC Engineering (https://djjrip.github.io)');
   console.log('================================================================\n');
 }
 
@@ -22,8 +22,9 @@ if (!command || command === '--help' || command === '-h') {
   console.log('\nExamples:');
   console.log('  npx stripe-webhook-guard audit ./src/routes');
   console.log('  npx stripe-webhook-guard audit server.js');
-  console.log('\nNeed expert hardening? Contact: Jayson Quindao <jquindao1@icloud.com> | (469) 371-8556');
-  console.log('Book 48-Hour Hardening Sprint: https://djjrip.github.io/hire-now.html');
+  console.log('\nNeed expert hardening? Contact: Jayson Quindao <jquindao1@icloud.com>');
+  console.log('Interactive Web Auditor: https://djjrip.github.io/audit.html');
+  console.log('Book $499 Hardening Sprint: https://djjrip.github.io/hire-now.html');
   process.exit(0);
 }
 
@@ -60,8 +61,9 @@ if (command === 'audit') {
       });
       console.log('\n----------------------------------------------------------------');
       console.log('💼 Need this fixed? Book the $499 Stripe Webhook Hardening Sprint:');
-      console.log('   Direct: Jayson Quindao | (469) 371-8556 | jquindao1@icloud.com');
-      console.log('   Checkout: https://djjrip.github.io/hire-now.html');
+      console.log('   Direct: Jayson Quindao | jquindao1@icloud.com');
+      console.log('   Live Checkout: https://buy.stripe.com/dRmdRb1NiaYpeDh6h20Fi04');
+      console.log('   Scope & Proof: https://djjrip.github.io/hire-now.html');
       console.log('----------------------------------------------------------------');
     }
 

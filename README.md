@@ -98,20 +98,23 @@ app.listen(3000, () => console.log('Webhook server running on :3000'));
 ## 🧪 Running Tests
 
 ```bash
-npx ts-node tests/guard.test.ts
+npm test
 ```
+
+*(Compiles ESM TypeScript test suite and executes all 5 cryptographic, replay-suppression, and AST scanner tests.)*
 
 ---
 
-## 💼 Enterprise Support & Custom Payment Integrations
+## 💼 Enterprise Support & Scoped Reliability Sprints
 
-Need custom payment architecture, multi-currency Stripe Connect routing, or zero-downtime database webhook reconciliation?
+Need custom payment architecture, webhook idempotency hardening, or zero-downtime billing reconciliation?
 
-* **$250 Fast-Fix Stripe Webhook Audit:** 3-hour diagnostic & production repair for failing webhook endpoints.
-* **$500 Complete Payment Pipeline Sprint:** Turnkey Express/Fastify/Next.js Stripe integration with PostgreSQL idempotency tables and dead-letter queue retries.
-* **Inquiries:** Contact Jayson Quindao (Lead Systems Architect & Founder) at **[jquindao1@icloud.com](mailto:jquindao1@icloud.com?subject=Stripe%20Webhook%20Integration%20Sprint)** or visit **[GG Loop Platform](https://djjrip.github.io/gaming-for-groceries/)**.
+* **Free Interactive HMAC Auditor:** [`djjrip.github.io/audit.html`](https://djjrip.github.io/audit.html)
+* **$499 Stripe Webhook Reliability Review:** Diagnostic, raw-body/idempotency remediation PR, and test suite — **[Direct Stripe Checkout](https://buy.stripe.com/dRmdRb1NiaYpeDh6h20Fi04)**
+* **$1,750 Two-Week Systems Security Sprint:** Turnkey Express/Next.js/Rust telemetry & billing hardening — **[See Scoped Sprints](https://djjrip.github.io/hire-now.html)**
+* **Inquiries:** Jayson Quindao (Founder, GG Loop LLC) — **[jquindao1@icloud.com](mailto:jquindao1@icloud.com?subject=Stripe%20Webhook%20Reliability%20Sprint)** | **[GitHub](https://github.com/djjrip)**
 
 ---
 
 ## 📄 License
-MIT License. Built by the **[GG Loop](https://djjrip.github.io/gaming-for-groceries/)** engineering team.
+MIT License. Built by **[GG Loop LLC](https://djjrip.github.io/hire-now.html)**.
